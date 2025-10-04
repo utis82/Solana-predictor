@@ -1,0 +1,39 @@
+{
+    "model_type": "Transformer",
+    "feature_cols": [
+        "price",
+        "volume",
+        "open",
+        "high",
+        "low",
+        "ma_7",
+        "ma_25",
+        "ma_99",
+        "rsi",
+        "macd",
+        "macd_signal",
+        "volatility",
+        "price_change",
+        "price_change_1h",
+        "price_change_24h",
+        "volume_change",
+        "bb_middle",
+        "bb_std",
+        "bb_upper",
+        "bb_lower"
+    ],
+    "target_cols": [
+        "target_change_1h",
+        "target_change_6h",
+        "target_change_24h"
+    ],
+    "input_size": 20,
+    "num_outputs": 3,
+    "d_model": 256,
+    "nhead": 8,
+    "num_layers": 4,
+    "train_date": "2025-10-03 21:47:05",
+    "final_train_loss": 14.205509662628174,
+    "final_val_loss": 13.652085494995116,
+    "best_val_loss": 11.788790130615235
+}

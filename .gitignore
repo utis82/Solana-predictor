@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# PyTorch models (gros fichiers)
+models/best_model.pth
+models/*.pth
+
+# Données (peuvent être lourdes)
+data/*.csv
+data/visualizations/
+data/*.png
+
+# Logs
+logs/
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spécifique au projet
+models/scaler.pkl
