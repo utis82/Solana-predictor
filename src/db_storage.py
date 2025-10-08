@@ -6,16 +6,27 @@ from psycopg2.extras import RealDictCursor
 
 class DatabaseStorage:
     def __init__(self):
-        database_url = os.environ.get('DATABASE_URL')
+        # Essayer d'abord l'URL publique, puis l'URL interne
+        database_url = os.environ.get('DATABASE_PUBLIC_URL') or os.environ.get('DATABASE_URL')
+        
+        if not database_url:
+            raise ValueError("DATABASE_URL ou DATABASE_PUBLIC_URL doit être définie")
+        
+        print(f"Connexion à la base de données...")
+        
         # Railway peut fournir une URL commençant par postgres://
-        # mais psycopg2 nécessite postgresql://
-        if database_url and database_url.startswith('postgres://'):
+        if database_url.startswith('postgres://'):
             database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        
+        # Ajouter SSL si nécessaire
+        if 'sslmode' not in database_url:
+            database_url += '?sslmode=require'
         
         self.conn = psycopg2.connect(database_url)
         self.conn.autocommit = True
+        print("Connexion réussie!")
         self.init_db()
-    
+        
     def init_db(self):
         """Crée les tables si elles n'existent pas"""
         with self.conn.cursor() as cur:
