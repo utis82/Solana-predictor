@@ -2,10 +2,18 @@ import os
 import json
 import psycopg2
 from datetime import datetime
+from psycopg2.extras import RealDictCursor
 
 class DatabaseStorage:
     def __init__(self):
-        self.conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
+        database_url = os.environ.get('DATABASE_URL')
+        # Railway peut fournir une URL commençant par postgres://
+        # mais psycopg2 nécessite postgresql://
+        if database_url and database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        
+        self.conn = psycopg2.connect(database_url)
+        self.conn.autocommit = True
         self.init_db()
     
     def init_db(self):
@@ -13,28 +21,27 @@ class DatabaseStorage:
         with self.conn.cursor() as cur:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS bot_state (
-                    id INTEGER PRIMARY KEY DEFAULT 1,
-                    capital FLOAT,
-                    position FLOAT,
+                    id SERIAL PRIMARY KEY,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    balance FLOAT,
+                    position TEXT,
+                    position_size FLOAT,
                     entry_price FLOAT,
-                    last_update TIMESTAMP,
-                    CHECK (id = 1)
+                    unrealized_pnl FLOAT,
+                    total_pnl FLOAT,
+                    trade_count INTEGER
                 )
             """)
             
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS trades (
                     id SERIAL PRIMARY KEY,
-                    timestamp TIMESTAMP,
-                    action TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    type TEXT,
                     price FLOAT,
-                    amount FLOAT,
-                    capital FLOAT,
-                    predicted_change FLOAT,
-                    rsi FLOAT,
-                    fee FLOAT,
+                    size FLOAT,
                     pnl FLOAT,
-                    pnl_pct FLOAT
+                    balance_after FLOAT
                 )
             """)
             
