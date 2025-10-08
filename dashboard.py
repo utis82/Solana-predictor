@@ -4,6 +4,7 @@ import json
 import plotly.graph_objects as go
 from datetime import datetime
 import os
+from src.db_storage import DatabaseStorage
 
 st.set_page_config(
     page_title="Paper Trading Dashboard",
@@ -28,13 +29,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+from src.db_storage import DatabaseStorage
+
 def load_state():
-    """Charge l'état du bot"""
-    if not os.path.exists('data/bot_state.json'):
+    db = DatabaseStorage()
+    state = db.load_state()
+    if not state:
         return None
     
-    with open('data/bot_state.json', 'r') as f:
-        return json.load(f)
+    return {
+        'capital': state['capital'],
+        'position': state['position'],
+        'entry_price': state['entry_price'],
+        'trades': db.get_trades(100),
+        'portfolio_history': db.get_portfolio_history(168)
+    }
 
 def main():
     st.title("📈 Paper Trading Dashboard")
