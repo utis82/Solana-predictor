@@ -3,26 +3,31 @@ import json
 import psycopg2
 from datetime import datetime
 from psycopg2.extras import RealDictCursor
+from urllib.parse import urlparse
 
 class DatabaseStorage:
     def __init__(self):
-        # Essayer d'abord l'URL publique, puis l'URL interne
-        database_url = os.environ.get('DATABASE_PUBLIC_URL') or os.environ.get('DATABASE_URL')
+        database_url = os.environ.get('DATABASE_URL')
         
         if not database_url:
-            raise ValueError("DATABASE_URL ou DATABASE_PUBLIC_URL doit être définie")
+            raise ValueError("DATABASE_URL doit être définie")
         
-        print(f"Connexion à la base de données...")
+        # Parser l'URL
+        result = urlparse(database_url)
         
-        # Railway peut fournir une URL commençant par postgres://
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        # Construire les paramètres de connexion explicitement
+        conn_params = {
+            'dbname': result.path[1:],  # Enlever le / initial
+            'user': result.username,
+            'password': result.password,
+            'host': result.hostname,
+            'port': result.port or 5432,
+            'sslmode': 'require'
+        }
         
-        # Ajouter SSL si nécessaire
-        if 'sslmode' not in database_url:
-            database_url += '?sslmode=require'
+        print(f"Connexion à {conn_params['host']}:{conn_params['port']}...")
         
-        self.conn = psycopg2.connect(database_url)
+        self.conn = psycopg2.connect(**conn_params)
         self.conn.autocommit = True
         print("Connexion réussie!")
         self.init_db()
