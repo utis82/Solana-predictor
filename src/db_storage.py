@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 class DatabaseStorage:
     def __init__(self):
         database_url = os.environ.get('DATABASE_URL')
-        
+
         if not database_url:
             raise ValueError("DATABASE_URL doit être définie")
         
@@ -27,51 +27,66 @@ class DatabaseStorage:
         
         print(f"Connexion à {conn_params['host']}:{conn_params['port']}...")
         
+        # CRÉER LA CONNEXION D'ABORD
         self.conn = psycopg2.connect(**conn_params)
         self.conn.autocommit = True
         print("Connexion réussie!")
-        self.init_db()
         
-    def init_db(self):
-        """Crée les tables si elles n'existent pas"""
+        # ENSUITE initialiser les tables
+        self._init_tables()
+
+    def _init_tables(self):
+        """Initialise les tables si elles n'existent pas"""
         with self.conn.cursor() as cur:
+            # Créer la table bot_state
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS bot_state (
-                    id SERIAL PRIMARY KEY,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    balance FLOAT,
-                    position TEXT,
-                    position_size FLOAT,
-                    entry_price FLOAT,
-                    unrealized_pnl FLOAT,
-                    total_pnl FLOAT,
-                    trade_count INTEGER
+                    id INTEGER PRIMARY KEY DEFAULT 1,
+                    capital DECIMAL(20, 8) DEFAULT 1000.0,
+                    position VARCHAR(10) DEFAULT 'none',
+                    entry_price DECIMAL(20, 8) DEFAULT 0,
+                    last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT single_row_check CHECK (id = 1)
                 )
             """)
             
+            # Insérer la ligne initiale si elle n'existe pas
+            cur.execute("""
+                INSERT INTO bot_state (id, capital, position, entry_price) 
+                VALUES (1, 1000.0, 'none', 0.0)
+                ON CONFLICT (id) DO NOTHING
+            """)
+            
+            # Créer la table trades avec toutes les colonnes nécessaires
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS trades (
                     id SERIAL PRIMARY KEY,
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    type TEXT,
-                    price FLOAT,
-                    size FLOAT,
-                    pnl FLOAT,
-                    balance_after FLOAT
+                    action VARCHAR(10),
+                    price DECIMAL(20, 8),
+                    amount DECIMAL(20, 8),
+                    capital DECIMAL(20, 8),
+                    predicted_change DECIMAL(10, 4),
+                    rsi DECIMAL(10, 4),
+                    fee DECIMAL(20, 8),
+                    pnl DECIMAL(20, 8),
+                    pnl_pct DECIMAL(10, 4)
                 )
             """)
             
+            # Créer la table portfolio_history
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS portfolio_history (
                     id SERIAL PRIMARY KEY,
                     timestamp TIMESTAMP,
-                    price FLOAT,
-                    portfolio_value FLOAT,
-                    roi FLOAT
+                    price DECIMAL(20, 8),
+                    portfolio_value DECIMAL(20, 8),
+                    roi DECIMAL(10, 4)
                 )
             """)
             
             self.conn.commit()
+            print("Tables initialisées avec succès!")
     
     def save_state(self, capital, position, entry_price):
         """Sauvegarde l'état du bot"""
@@ -94,9 +109,9 @@ class DatabaseStorage:
             result = cur.fetchone()
             if result:
                 return {
-                    'capital': result[0],
+                    'capital': float(result[0]),
                     'position': result[1],
-                    'entry_price': result[2]
+                    'entry_price': float(result[2])
                 }
             return None
     
@@ -137,14 +152,14 @@ class DatabaseStorage:
                 trades.append({
                     'timestamp': row[0].isoformat(),
                     'action': row[1],
-                    'price': row[2],
-                    'amount': row[3],
-                    'capital': row[4],
-                    'predicted_change': row[5],
-                    'rsi': row[6],
-                    'fee': row[7],
-                    'pnl': row[8],
-                    'pnl_pct': row[9]
+                    'price': float(row[2]),
+                    'amount': float(row[3]),
+                    'capital': float(row[4]),
+                    'predicted_change': float(row[5]),
+                    'rsi': float(row[6]),
+                    'fee': float(row[7]),
+                    'pnl': float(row[8]),
+                    'pnl_pct': float(row[9])
                 })
             return trades
     
@@ -171,9 +186,8 @@ class DatabaseStorage:
             for row in cur.fetchall():
                 history.append({
                     'timestamp': row[0].isoformat(),
-                    'price': row[1],
-                    'portfolio_value': row[2],
-                    'roi': row[3]
+                    'price': float(row[1]),
+                    'portfolio_value': float(row[2]),
+                    'roi': float(row[3])
                 })
             return history
-        

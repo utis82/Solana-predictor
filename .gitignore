@@ -1,19 +1,15 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
 .Python
 .venv/
 venv/
-ENV/
 
-# PyTorch models (gros fichiers)
-models/best_model.pth
-models/*.pth
+# Données CSV volumineuses
+data/solana_hourly.csv
+data/solana_daily.csv
 
-# Données (peuvent être lourdes)
-data/*.csv
+# Visualisations générées
 data/visualizations/
 data/*.png
 
@@ -21,18 +17,17 @@ data/*.png
 logs/
 *.log
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Spécifique au projet
-models/scaler.pkl
+# À NE PAS ignorer (nécessaires pour Railway)
+# models/best_model.pth
+# models/scaler.pkl
+# models/metadata.json
+# data/solana_prepared.csv
+models/best_model.pth
