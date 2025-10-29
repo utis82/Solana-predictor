@@ -1,0 +1,9 @@
+[phases.setup]
+nixPkgs = ["git", "git-lfs"]
+
+[phases.install]
+cmds = [
+  "chmod +x railway_prebuild.sh",
+  "./railway_prebuild.sh",
+  "pip install -r requirements.txt"
+]
