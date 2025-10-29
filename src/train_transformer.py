@@ -355,7 +355,7 @@ def save_model_info(model, scaler_X, feature_cols, target_cols, train_losses, va
     os.makedirs('models', exist_ok=True)
     
     import joblib
-    joblib.dump(scaler_X, 'models/scaler.pkl')
+    joblib.dump(scaler_X, 'models/scaler.pkl', protocol=4)
     
     metadata = {
         'model_type': 'Transformer',
