@@ -105,8 +105,7 @@ class RailwayBot:
             dim_feedforward=2048, dropout=0.15, num_outputs=3
         ).to(device)
         
-        model.load_state_dict(torch.load('models/best_model.pth', 
-                                         map_location=device, weights_only=True))
+        model.load_state_dict(torch.load('models/best_model.pth', map_location=device, weights_only=False))
         model.eval()
         
         return model, scaler
